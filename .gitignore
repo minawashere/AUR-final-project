@@ -1,0 +1,5 @@
+.pio
+.idea
+platformio.ini
+sdkconfig.esp32dev
+test
