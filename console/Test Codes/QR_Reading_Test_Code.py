@@ -1,18 +1,29 @@
-import cv2
+import cv2, time
 import numpy as np
 from qreader import QReader
 
 cap = cv2.VideoCapture (1)
+# cap.set(cv2.CAP_PROP_FRAME_WIDTH, 400)
+# cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 400)
+
+qreader = QReader()
+
+prev = 0
+new = 0
 
 while (cap.isOpened ()):
 
     _, img = cap.read ();
 
+    img = cv2.resize(img, (400, 400), fx = 0, fy = 0,interpolation = cv2.INTER_CUBIC)
+
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-    qreader = QReader()
-
     decoded_text, detections = qreader.detect_and_decode(image=img, return_detections=True)
+
+    new = time.time ()
+    print (f"fps = {1/(new - prev)}")
+    prev = new
 
     for i, qr in enumerate(decoded_text):
         print(f"QR Code {i+1}: {qr}")
