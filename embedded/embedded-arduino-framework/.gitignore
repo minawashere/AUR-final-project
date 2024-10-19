@@ -1,1 +1,5 @@
 .pio
+platformio.ini
+.idea
+test
+
