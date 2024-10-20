@@ -1,10 +1,7 @@
-#include <Arduino.h>
-// #include <Arduino_FreeRTOS.h>
 
+
+#include <Arduino.h>
 #include <Wire.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/queue.h"
 
 #define SDA_PIN 21
 #define SCL_PIN 22
@@ -43,7 +40,7 @@ void configure_IMU()
     I2C_WriteByte(MPU6050_ADDR, 0x1B, 0x00);
 }
 
-void readData(int16_t *accData, int16_t *gyrData)
+void read_IMU(int16_t *accData, int16_t *gyrData)
 {
     Wire.beginTransmission(MPU6050_ADDR);
     Wire.write(0x3B);
@@ -65,7 +62,6 @@ void convertData(int16_t *accData, int16_t *gyrData, float *convAccData, float *
 {
     float accFactor = 16384.0;
     float gyrFactor = 131.0;
-
     for (int i = 0; i < 3; i++)
     {
         convAccData[i] = accData[i] / accFactor;
@@ -73,53 +69,6 @@ void convertData(int16_t *accData, int16_t *gyrData, float *convAccData, float *
     }
 }
 
-void Task1_readData(void *pvParameters)
-{
-    imuData data;
-    while (1)
-    {
-        readData(data.accData, data.gyrData);
-        if (xQueueSend(imuQueue, &data, portMAX_DELAY) != pdTRUE)
-        {
-            Serial.println("Error:failed to send the data to the queue");
-        }
-        vTaskDelay(pdMS_TO_TICKS(100));
-    }
-}
 
-void Task2_convertData(void *pvParameters)
-{
-    imuData data;
-    float convAccData[3], convGyrData[3];
-    while (1)
-    {
-        if (xQueueReceive(imuQueue, &data, portMAX_DELAY) == pdTRUE)
-            convertData(data.accData, data.gyrData, convAccData, convGyrData);
-        // Serial.println(convAccData[0]);
-        Serial.println(convGyrData[0]);
 
-        // use the converted data
-    }
-}
 
-void setup()
-{
-    Serial.begin(9600);
-
-    init_i2c();
-    init_IMU();
-    configure_IMU();
-
-    imuQueue = xQueueCreate(20, sizeof(imuData));
-    if (imuQueue == NULL)
-    {
-        Serial.print("Error in initalizing queue");
-    }
-    xTaskCreate(Task1_readData, "Task1_readData", 2048, NULL, 1, NULL);
-    xTaskCreate(Task2_convertData, "Task2_convertData", 2048, NULL, 1, NULL);
-}
-
-void loop()
-{
-    // put your main code here, to run repeatedly:
-}
