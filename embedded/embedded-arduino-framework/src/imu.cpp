@@ -15,10 +15,11 @@ typedef struct
 
 QueueHandle_t imuQueue;
 
-void init_i2c()
+void i2c_init()
 {
     Wire.begin(SDA_PIN, SCL_PIN);
     Wire.setClock(400000); // fast mode
+    Serial.println("I2C init");
 }
 
 void I2C_WriteByte(uint8_t address, uint8_t reg, uint8_t data)
@@ -29,7 +30,7 @@ void I2C_WriteByte(uint8_t address, uint8_t reg, uint8_t data)
     Wire.endTransmission();
 }
 
-void init_IMU()
+void imu_init()
 {
     I2C_WriteByte(MPU6050_ADDR, 0x6B, 0x00);
 }

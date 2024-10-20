@@ -7,7 +7,7 @@
 #include <Wire.h>
 
 void imu_init();
-void init_i2c();
+void i2c_init();
 void I2C_writeByte(uint8_t address, uint8_t reg, uint8_t data);
 void init_IMU();
 void configure_IMU();

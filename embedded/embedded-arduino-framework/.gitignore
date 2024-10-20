@@ -1,5 +1,6 @@
 .pio
-platformio.ini
 .idea
 test
+include
+lib
 

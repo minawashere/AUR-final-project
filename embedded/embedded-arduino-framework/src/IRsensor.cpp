@@ -2,7 +2,7 @@
 #include <Arduino.h>
 
 
-IRsensor::IRsensor(int pin) : pin(pin) {
+IRsensor::IRsensor(uint8_t pin) : pin(pin) {
     pinMode(pin, INPUT);
 }
 
