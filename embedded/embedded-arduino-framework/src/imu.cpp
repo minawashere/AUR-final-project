@@ -68,6 +68,3 @@ void convertData(int16_t *accData, int16_t *gyrData, float *convAccData, float *
     }
 }
 
-
-
-
