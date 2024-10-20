@@ -1,13 +1,12 @@
 #ifndef IRSENSOR_H
 #define IRSENSOR_H
-
+#include <Arduino.h>
 
 
 class IRsensor {
-private:
-    int pin;
+    uint8_t pin;
 public:
-    explicit IRsensor(int pin);
+    IRsensor(uint8_t pin);
     bool read();
 };
 
