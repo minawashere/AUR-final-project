@@ -67,7 +67,3 @@ void convertData(int16_t *accData, int16_t *gyrData, float *convAccData, float *
         conGyrData[i] = gyrData[i] / gyrFactor;
     }
 }
-
-
-
-
