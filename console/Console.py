@@ -2,6 +2,9 @@ import tkinter as tk
 from tkinter import Canvas
 from PIL import Image, ImageTk
 import cv2
+import numpy as np
+from pyzbar.pyzbar import decode
+from urllib.parse import parse_qs
 
 WINDOW_WIDTH = 1200
 WINDOW_HEIGHT = 700
@@ -24,13 +27,15 @@ class RobotApp:
         self.robot_image = Image.open(r"C:\Users\Zaki\Desktop\AU Final Project Console\Test Codes\arrow.png").resize((ROBOT_SIZE, ROBOT_SIZE))
         self.robot_photo = ImageTk.PhotoImage(self.robot_image)
         self.robot_x, self.robot_y = 10, MAP_SIZE - 10 
+        self.target_x = 0
+        self.target_y = 0
         self.robot_direction = 0  
         self.robot_on_map = self.map_canvas.create_image(self.robot_x, self.robot_y, image=self.robot_photo, anchor=tk.CENTER)
         
-        self.coordinates_label = tk.Label(self.root, text=f"Current: ({self.robot_x}, {self.robot_y})", font=("Arial", 12))
+        self.coordinates_label = tk.Label(self.root, text=f"Current: ({self.target_x}, {self.robot_y})", font=("Arial", 12))
         self.coordinates_label.place(x=500, y=520)
         
-        self.target_label = tk.Label(self.root, text="Target: (x, y)", font=("Arial", 12))
+        self.target_label = tk.Label(self.root, text=f"Target: ({self.robot_x}, {self.target_y})", font=("Arial", 12))
         self.target_label.place(x=500, y=550)
 
         self.root.bind("<Up>", self.move_forward)
@@ -45,6 +50,46 @@ class RobotApp:
         ret, frame = self.cap.read()
         if ret:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            qr_codes = decode(gray_frame)
+
+            if qr_codes:
+                for qr_code in qr_codes:
+                    # Extract the data from the QR code
+                    qr_data = qr_code.data.decode('utf-8')
+                    print("QR Code Data:", qr_data)
+                    
+                    start_x, start_y, width, height = qr_code.rect
+
+                    cv2.rectangle (frame, (start_x, start_y), (start_x + width, start_y + height), (0, 255, 0), 2)
+                    cv2.putText(frame, qr_data, (start_x, start_y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+                    str_x = ""
+                    str_y = ""
+                    flag = 0
+                    for c in qr_data:
+                        if (c == '&'):
+                            flag = 1
+                            continue ;
+                        if (flag and ord (c) >= ord ('0') and ord (c) <= ord ('9')):
+                            str_y += c
+                        elif (ord (c) >= ord ('0') and ord (c) <= ord ('9')):
+                            str_x += c
+
+                    parsed_data = parse_qs(qr_data)
+
+                    self.target_x = float(parsed_data['X'][0])
+                    self.target_y = float(parsed_data['Y'][0])
+
+                    self.target_label.config(text=f"Current: ({self.target_x}, {self.target_y})")
+
+                    # if len(points) > 4:
+                    #     hull = cv2.convexHull(np.array([point for point in points], dtype=np.float32))
+                    #     cv2.polylines(frame, [hull], True, (255, 0, 255), 2)
+                    # else:
+                    #     cv2.polylines(frame, [np.array(points, dtype=np.int32)], True, (0, 255, 0), 2)
+
+
             frame_image = Image.fromarray(frame)
             frame_photo = ImageTk.PhotoImage(frame_image)
             self.video_frame.config(image=frame_photo)
