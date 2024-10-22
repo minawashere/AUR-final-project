@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 
+
 #define SDA_PIN 21
 #define SCL_PIN 22
 #define MPU6050_ADDR 0x68 //(AD0 IS CONNECTED TO THE GROUND)
@@ -17,7 +18,6 @@ void i2c_init()
 {
     Wire.begin(SDA_PIN, SCL_PIN);
     Wire.setClock(400000); // fast mode
-    Serial.println("I2C init");
 }
 
 void I2C_WriteByte(uint8_t address, uint8_t reg, uint8_t data)
