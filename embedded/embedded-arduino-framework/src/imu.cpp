@@ -10,8 +10,8 @@
 
 struct IMU{
     IMU(){}
-    int16_t accData[3];
-    int16_t gyroData[3];
+    float accData[3];
+    float gyroData[3];
 };
 
 
@@ -40,22 +40,31 @@ void configure_IMU()
     I2C_WriteByte(MPU6050_ADDR, 0x1B, 0x00); //set gy250 rev/s
 }
 
-void fetchIMU(int16_t *accData, int16_t *gyrData)
-{
+
+void fetchIMU(int16_t *accData, int16_t *gyrData) {
+    // Read accelerometer data
+    Wire.endTransmission();
     Wire.beginTransmission(MPU6050_ADDR);
-    Wire.write(0x3B); //starting register
-    Wire.endTransmission(false);
-    if (Wire.endTransmission() != 0)
-    {
-        Serial.println("Error: Communication failed with MPU6050.");
-        return;
+    Wire.write(0x3B); // Starting register for accelerometer data
+    Wire.endTransmission(false);  // Keep transmission open for repeated start
+
+    Wire.requestFrom(MPU6050_ADDR, 6); // Request 6 bytes for accelerometer
+    for (int i = 0; i < 3; i++) {
+        accData[i] = ((Wire.read() << 8) | Wire.read()) / ACC_FACTOR; // Combine high and low bytes
     }
-    Wire.requestFrom(MPU6050_ADDR, 12);
-    for (int i = 0; i < 3; i++)
-    {
-        accData[i] = ((Wire.read() << 8) | Wire.read())/ ACC_FACTOR;
-        gyrData[i] = ((Wire.read() << 8) | Wire.read()) / GYRO_FACTOR;
+
+    // Read gyroscope data
+    Wire.beginTransmission(MPU6050_ADDR);
+    Wire.write(0x43); // Starting register for gyroscope data
+    Wire.endTransmission(false); // Keep transmission open for repeated start
+
+    Wire.requestFrom(MPU6050_ADDR, 6); // Request 6 bytes for gyroscope
+    for (int i = 0; i < 3; i++) {
+        gyrData[i] = ((Wire.read() << 8) | Wire.read()) / GYRO_FACTOR; // Combine high and low bytes
     }
+    Wire.endTransmission();
+
+
 }
 
 // void convertData(int16_t *accData, int16_t *gyrData, float *convAccData, float *conGyrData)

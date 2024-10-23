@@ -7,6 +7,8 @@ void setup() {
     Serial.begin(115200);
     delay(200);
     i2c_init();
+    imu_init();
+    Serial.println("Hello World!");
 }
 
 
@@ -14,19 +16,19 @@ void setup() {
 void loop() {
     fetchIMU(imu.accData, imu.gyroData);
 
-    Serial.print("Gyx ");
+    Serial.print("Accx ");
     Serial.print(imu.accData[0]);
-    Serial.print(" Gyy ");
+    Serial.print(" Accy ");
     Serial.print(imu.accData[1]);
-    Serial.print(" Gyz ");
+    Serial.print(" Accz ");
     Serial.print(imu.accData[2]);
     Serial.print(" Gyx ");
     Serial.print(imu.gyroData[0]);
 
-    Serial.print(" accx");
+    Serial.print(" GyY");
     Serial.print(imu.gyroData[1]);
 
-    Serial.print(" accy");
+    Serial.print(" GyZ");
     Serial.print(imu.gyroData[2]);
 
 
