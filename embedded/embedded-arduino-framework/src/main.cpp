@@ -7,7 +7,7 @@ void setup() {
     Serial.begin(115200);
     delay(200);
     i2c_init();
-    imu_init();
+    IMU_init();
     Serial.println("Hello World!");
 }
 
