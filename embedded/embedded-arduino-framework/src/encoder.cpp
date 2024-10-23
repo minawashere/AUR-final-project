@@ -2,12 +2,13 @@
 
 // Static variables to store encoder states
 volatile int Encoder::encoderPosition = 0;
-volatile bool Encoder::encoderDirection = 0;
+volatile int Encoder::encoderDirection = 0;
+volatile int Encoder::pulseCount = 0;
 
-#define PPR                                       // Pulses per revolution (example)
-#define WHEEL_DIAMETER                            // Wheel diameter in cm (example)
-#define WHEEL_CIRCUMFERENCE (PI * WHEEL_DIAMETER) // Circumference in cm
-#define DISTANCE_PER_PULSE
+#define PPR 44 // pulses per rev
+// #define WHEEL_DIAMETER                            // Wheel diameter in cm (example)
+// #define WHEEL_CIRCUMFERENCE (PI * WHEEL_DIAMETER) // Circumference in cm
+// #define DISTANCE_PER_PULSE
 
 Encoder::Encoder(int pinA, int pinB)
 {
@@ -41,10 +42,10 @@ bool Encoder::getDirection()
     return encoderDirection;
 }
 
-float Encoder::getDistance()
-{
-    return encoderPosition * DISTANCE_PER_PULSE;
-}
+// float Encoder::getDistance()
+// {
+//     return encoderPosition * DISTANCE_PER_PULSE;
+// }
 
 // ISR for pin A
 void IRAM_ATTR Encoder::encoderISR_A()
@@ -62,6 +63,7 @@ void IRAM_ATTR Encoder::encoderISR_A()
         encoderPosition--;
         encoderDirection = 0;
     }
+    pulseCount++;
 }
 
 // ISR for pin B
@@ -78,6 +80,14 @@ void IRAM_ATTR Encoder::encoderISR_B()
     else
     {
         encoderPosition--;
-        encoderDirection = 0;
+        encoderDirection = -1;
     }
+    pulseCount++;
+}
+
+float Encoder::calcRPM()
+{
+    float rpm = (pulseCount / PPR) * 60;
+    pulseCount = 0;
+    return rpm;
 }
