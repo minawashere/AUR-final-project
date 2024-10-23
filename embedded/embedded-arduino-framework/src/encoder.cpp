@@ -4,6 +4,11 @@
 volatile int Encoder::encoderPosition = 0;
 volatile bool Encoder::encoderDirection = 0;
 
+#define PPR                                       // Pulses per revolution (example)
+#define WHEEL_DIAMETER                            // Wheel diameter in cm (example)
+#define WHEEL_CIRCUMFERENCE (PI * WHEEL_DIAMETER) // Circumference in cm
+#define DISTANCE_PER_PULSE
+
 Encoder::Encoder(int pinA, int pinB)
 {
     this->pinA = pinA;
@@ -34,6 +39,11 @@ int Encoder::getPosition()
 bool Encoder::getDirection()
 {
     return encoderDirection;
+}
+
+float Encoder::getDistance()
+{
+    return encoderPosition * DISTANCE_PER_PULSE;
 }
 
 // ISR for pin A

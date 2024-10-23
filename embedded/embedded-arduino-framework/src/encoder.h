@@ -10,6 +10,7 @@ public:
     void begin();                // Method to set up pins and interrupts
     int getPosition();           // Method to get the current position
     bool getDirection();         // Method to get the rotation direction
+    float getDistance();         // Method to get the rotation direction
 
 private:
     int pinA, pinB;
