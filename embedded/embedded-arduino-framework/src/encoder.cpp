@@ -1,4 +1,4 @@
-#include "Encoder.h"
+#include "encoder.h"
 
 // Static variables to store encoder states
 volatile int Encoder::encoderPosition = 0;

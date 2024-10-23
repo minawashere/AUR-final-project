@@ -49,10 +49,15 @@ void read_IMU(int16_t *accData, int16_t *gyrData)
         Serial.println("Error: Communication failed with MPU6050.");
         return;
     }
-    Wire.requestFrom(MPU6050_ADDR, 12);
+    Wire.requestFrom(MPU6050_ADDR, 6);
     for (int i = 0; i < 3; i++)
     {
         accData[i] = (Wire.read() << 8) | Wire.read();
+    }
+    Wire.write(0x43);
+    Wire.requestFrom(MPU6050_ADDR, 6);
+    for (int i = 0; i < 3; i++)
+    {
         gyrData[i] = (Wire.read() << 8) | Wire.read();
     }
 }
@@ -66,4 +71,11 @@ void convertData(int16_t *accData, int16_t *gyrData, float *convAccData, float *
         convAccData[i] = accData[i] / accFactor;
         conGyrData[i] = gyrData[i] / gyrFactor;
     }
+}
+
+while(1) {
+    imuData data;
+    float convAccData[3],convGyrData[3];
+    read_IMU(data.accData,data.gyrData);
+
 }
