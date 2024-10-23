@@ -5,14 +5,15 @@
 #define SDA_PIN 21
 #define SCL_PIN 22
 #define MPU6050_ADDR 0x68 //(AD0 IS CONNECTED TO THE GROUND)
+#define ACC_FACTOR 16384.0
+#define GYRO_FACTOR 131.0
 
-typedef struct
-{
+struct IMU{
+    IMU(){}
     int16_t accData[3];
-    int16_t gyrData[3];
-} imuData;
+    int16_t gyroData[3];
+};
 
-    imuData imu;
 
 void i2c_init()
 {
@@ -30,19 +31,19 @@ void I2C_WriteByte(uint8_t address, uint8_t reg, uint8_t data)
 
 void imu_init()
 {
-    I2C_WriteByte(MPU6050_ADDR, 0x6B, 0x00);
+    I2C_WriteByte(MPU6050_ADDR, 0x6B, 0x00); //power management register
 }
 
 void configure_IMU()
 {
-    I2C_WriteByte(MPU6050_ADDR, 0x1C, 0x00);
-    I2C_WriteByte(MPU6050_ADDR, 0x1B, 0x00);
+    I2C_WriteByte(MPU6050_ADDR, 0x1C, 0x00); //set acc 2g
+    I2C_WriteByte(MPU6050_ADDR, 0x1B, 0x00); //set gy250 rev/s
 }
 
-void read_IMU(int16_t *accData, int16_t *gyrData)
+void fetchIMU(int16_t *accData, int16_t *gyrData)
 {
     Wire.beginTransmission(MPU6050_ADDR);
-    Wire.write(0x3B);
+    Wire.write(0x3B); //starting register
     Wire.endTransmission(false);
     if (Wire.endTransmission() != 0)
     {
@@ -52,18 +53,16 @@ void read_IMU(int16_t *accData, int16_t *gyrData)
     Wire.requestFrom(MPU6050_ADDR, 12);
     for (int i = 0; i < 3; i++)
     {
-        accData[i] = (Wire.read() << 8) | Wire.read();
-        gyrData[i] = (Wire.read() << 8) | Wire.read();
+        accData[i] = ((Wire.read() << 8) | Wire.read())/ ACC_FACTOR;
+        gyrData[i] = ((Wire.read() << 8) | Wire.read()) / GYRO_FACTOR;
     }
 }
 
-void convertData(int16_t *accData, int16_t *gyrData, float *convAccData, float *conGyrData)
-{
-    float accFactor = 16384.0;
-    float gyrFactor = 131.0;
-    for (int i = 0; i < 3; i++)
-    {
-        convAccData[i] = accData[i] / accFactor;
-        conGyrData[i] = gyrData[i] / gyrFactor;
-    }
-}
+// void convertData(int16_t *accData, int16_t *gyrData, float *convAccData, float *conGyrData)
+// {
+//     for (int i = 0; i < 3; i++)
+//     {
+//         convAccData[i] = accData[i] / ACC_FACTOR;
+//         conGyrData[i] = gyrData[i] / GYRO_FACTOR;
+//     }
+// }
