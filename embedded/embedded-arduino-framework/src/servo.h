@@ -4,10 +4,10 @@
 
 #include <Arduino.h>
 
-class ServoDriver
+class Servo
 {
 public:
-    ServoDriver(int pin);
+    explicit Servo(int pin);
     void write(float angle);
 
 private:
