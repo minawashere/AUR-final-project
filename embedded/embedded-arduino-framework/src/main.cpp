@@ -1,14 +1,14 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
-#include <encoder.h>
+#include <mqtt_client.h>
+
+void callback(char *topic, byte *payload, unsigned int length);
 
 
-// WiFi
 const char *ssid = "Bravo Toto";
 const char *password = "kirowashere";
 
-// MQTT Broker
 const char *mqtt_broker = "mqtt.eclipseprojects.io";
 const char *topic = "Motion Commands";
 const int mqtt_port = 1883;
@@ -27,7 +27,7 @@ void setup() {
         Serial.println("Connecting to WiFi..");
     }
     Serial.println("Connected to the Wi-Fi network");
-    //connecting to a mqtt broker
+
     client.setServer(mqtt_broker, mqtt_port);
     client.setCallback(callback);
     while (!client.connected()) {
