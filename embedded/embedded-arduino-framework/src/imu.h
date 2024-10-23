@@ -11,7 +11,7 @@ void i2c_init();
 void I2C_writeByte(uint8_t address, uint8_t reg, uint8_t data);
 void init_IMU();
 void configure_IMU();
-void read_IMU();
+void read_IMU(int16_t *accData, int16_t *gyrData);
 void convert_IMU();
 
 #endif //IMU_H

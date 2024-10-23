@@ -12,7 +12,7 @@ typedef struct
     int16_t gyrData[3];
 } imuData;
 
-QueueHandle_t imuQueue;
+    imuData imu;
 
 void i2c_init()
 {

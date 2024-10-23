@@ -1,13 +1,11 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
-#include <mqtt_client.h>
+#include <imu.h> // Your custom IMU library
 
-void callback(char *topic, byte *payload, unsigned int length);
-
-
-const char *ssid = "Bravo Toto";
-const char *password = "kirowashere";
+// WiFi and MQTT configuration
+const char *ssid = "Mina's Galaxy Note20 Ultra 5G";
+const char *password = "loli1414";
 
 const char *mqtt_broker = "mqtt.eclipseprojects.io";
 const char *topic = "Motion Commands";
@@ -16,11 +14,22 @@ const int mqtt_port = 1883;
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+unsigned long lastMsgTime = 0;
+const unsigned long interval = 20; // 20 ms for 50 Hz
+
+// Function declarations
+void callback(const char *topic, const byte *payload, unsigned int length);
+
 void setup() {
     Serial.begin(115200);
-
     delay(1000);
 
+    // Initialize I2C and IMU
+    i2c_init();  // Using your library
+    imu_init();  // Initialize the IMU from your library
+    configure_IMU();  // Configure the IMU (accelerometer and gyroscope) using your library
+
+    // Connect to Wi-Fi
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
@@ -28,6 +37,7 @@ void setup() {
     }
     Serial.println("Connected to the Wi-Fi network");
 
+    // Connect to MQTT broker
     client.setServer(mqtt_broker, mqtt_port);
     client.setCallback(callback);
     while (!client.connected()) {
@@ -37,35 +47,69 @@ void setup() {
         if (client.connect(client_id.c_str())) {
             Serial.println("Public EMQX MQTT broker connected");
         } else {
-            Serial.print("failed with state ");
+            Serial.print("Failed with state ");
             Serial.print(client.state());
             delay(2000);
         }
     }
+
     // Publish and subscribe
-    client.publish(topic, "Hi, I'm ESP32 ^^");
+    client.publish(topic, "MQTT CONNECTED");
     client.subscribe(topic);
 }
 
-void callback(char *topic, byte *payload, unsigned int length) {
-    Serial.print("Message arrived in topic: ");
-    Serial.println(topic);
-    Serial.print("Message:");
-    for (int i = 0; i < length; i++) {
-        Serial.print((char) payload[i]);
-    }
-    Serial.println();
-    Serial.println("-----------------------");
+void callback(const char *topic, const byte *payload, const unsigned int length) {
+    // Handle incoming messages
 }
 
 void loop() {
-    String msg = "Hello";
-    static unsigned long lastMsg = 0;
-    unsigned long now = millis() ;
-    long now2 ;
-    if (now - lastMsg > 1000) {
-        lastMsg = now;
-        client.publish(topic, msg.c_str());
+    // Get the current time
+    unsigned long currentTime = millis();
+
+    // Send data every 20ms (50 Hz)
+    if (currentTime - lastMsgTime >= interval) {
+        lastMsgTime = currentTime;
+
+        // IMU data using your library
+        int16_t accData[3];
+        int16_t gyrData[3];
+        read_IMU(accData, gyrData); // Read raw data from the IMU (from your library)
+
+        // Print IMU data to Serial Monitor
+        Serial.print("Acc X: "); Serial.print(accData[0]);
+        Serial.print(" Acc Y: "); Serial.print(accData[1]);
+        Serial.print(" Acc Z: "); Serial.println(accData[2]);
+        Serial.print("Gyr X: "); Serial.print(gyrData[0]);
+        Serial.print(" Gyr Y: "); Serial.print(gyrData[1]);
+        Serial.print(" Gyr Z: "); Serial.println(gyrData[2]);
+
+        // Create a JSON array to hold the data
+        StaticJsonDocument<JSON_ARRAY_SIZE(8)> doc;
+        JsonArray array = doc.to<JsonArray>();
+
+        // Fill the array with IMU data (first 6 slots) and 0 for the last 2 slots
+        array.add(accData[0]); // Acc X
+        array.add(accData[1]); // Acc Y
+        array.add(accData[2]); // Acc Z
+        array.add(gyrData[0]); // Gyr X
+        array.add(gyrData[1]); // Gyr Y
+        array.add(gyrData[2]); // Gyr Z
+        array.add(0);          // Placeholder
+        array.add(0);          // Placeholder
+
+        // Determine the size needed for the MessagePack format
+        size_t bufferSize = measureMsgPack(doc);
+
+        // Allocate the buffer to store serialized MessagePack
+        uint8_t payload[bufferSize];
+
+        // Serialize the array into the MessagePack buffer
+        serializeMsgPack(doc, payload, bufferSize);
+
+        // Publish the MessagePack data
+        client.publish(topic, payload, bufferSize);
     }
+
+    // Maintain the MQTT connection
     client.loop();
 }
