@@ -8,12 +8,12 @@ class Servo
 {
 public:
     explicit Servo(int pin);
-    void write(float angle);
+    void write(float speed);
 
 private:
     int servoPin;
     void setServoPin();
-    float calcPulseWidth(float angle);
+    float calcPulseWidth(float speed);
 };
 
 #endif

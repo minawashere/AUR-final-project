@@ -12,13 +12,13 @@ void Servo::setServoPin()
     gpio_set_direction(static_cast<gpio_num_t>(servoPin), GPIO_MODE_OUTPUT);
 }
 
-float Servo::calcPulseWidth(float angle)
+float Servo::calcPulseWidth(float speed)
 {
-    float pulseWidth = 1000 + (angle * 1000 / 180);
+    float pulseWidth = 1500 + (speed * 500);
     return pulseWidth;
 }
 
-void Servo::write(float angle)
+void Servo::write(float speed)
 {
     GPIO.out_w1ts = (1 << servoPin); // Set pin high
     delayMicroseconds(static_cast<int>(calcPulseWidth(angle)));

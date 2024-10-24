@@ -5,7 +5,7 @@ volatile int Encoder::encoderPosition = 0;
 volatile int Encoder::encoderDirection = 0;
 volatile int Encoder::pulseCount = 0;
 
-#define PPR 44 // pulses per rev
+#define PPR 22 // pulses per rev
 // #define WHEEL_DIAMETER                            // Wheel diameter in cm (example)
 // #define WHEEL_CIRCUMFERENCE (PI * WHEEL_DIAMETER) // Circumference in cm
 // #define DISTANCE_PER_PULSE
