@@ -1,23 +1,26 @@
 #include "encoder.h"
-
+#include "Arduino.h"
 // Static variables to store encoder states
+enum Direction {FORWARD = 1, BACKWARD = -1, };
+
 volatile int Encoder::encoderPosition = 0;
-volatile int Encoder::encoderDirection = 0;
+volatile Direction encoderDirection = FORWARD;
 volatile int Encoder::pulseCount = 0;
 
-#define PPR 44 // pulses per rev
 // #define WHEEL_DIAMETER                            // Wheel diameter in cm (example)
 // #define WHEEL_CIRCUMFERENCE (PI * WHEEL_DIAMETER) // Circumference in cm
 // #define DISTANCE_PER_PULSE
 
-Encoder::Encoder(int pinA, int pinB)
-{
-    this->pinA = pinA;
-    this->pinB = pinB;
+Encoder::Encoder(const int pinA, const int pinB)
+            : pinA(pinA), pinB(pinB) {
+
+
 }
+
 
 void Encoder::begin()
 {
+    attachInterrupt()
     // Setup pins
     gpio_pad_select_gpio(pinA);
     gpio_set_direction(static_cast<gpio_num_t>(pinA), GPIO_MODE_INPUT);
