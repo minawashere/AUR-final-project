@@ -2,14 +2,13 @@
 #include "esp_intr_alloc.h"
 #include "soc/gpio_reg.h"
 
-// Static variables to store encoder states
 volatile int Encoder::encoderPosition = 0;
-volatile int Encoder::encoderDirection = 0;
+volatile bool encoderDirection = 0;
 volatile int Encoder::pulseCount = 0;
 
 #define PPR 22 // pulses per revolution
 
-Encoder::Encoder(int pinA, int pinB)
+Encoder::Encoder(const int pinA, const int pinB)
 {
     this->pinA = pinA;
     this->pinB = pinB;
