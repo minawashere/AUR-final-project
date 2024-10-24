@@ -1,14 +1,13 @@
 #include "encoder.h"
+#include "esp_intr_alloc.h"
+#include "soc/gpio_reg.h"
 
 // Static variables to store encoder states
 volatile int Encoder::encoderPosition = 0;
 volatile int Encoder::encoderDirection = 0;
 volatile int Encoder::pulseCount = 0;
 
-#define PPR 22 // pulses per rev
-// #define WHEEL_DIAMETER                            // Wheel diameter in cm (example)
-// #define WHEEL_CIRCUMFERENCE (PI * WHEEL_DIAMETER) // Circumference in cm
-// #define DISTANCE_PER_PULSE
+#define PPR 22 // pulses per revolution
 
 Encoder::Encoder(int pinA, int pinB)
 {
@@ -18,18 +17,20 @@ Encoder::Encoder(int pinA, int pinB)
 
 void Encoder::begin()
 {
-    // Setup pins
-    gpio_pad_select_gpio(pinA);
+    gpio_reset_pin(static_cast<gpio_num_t>(pinA));
     gpio_set_direction(static_cast<gpio_num_t>(pinA), GPIO_MODE_INPUT);
     gpio_set_pull_mode(static_cast<gpio_num_t>(pinA), GPIO_PULLUP_ONLY);
 
-    gpio_pad_select_gpio(pinB);
+    gpio_reset_pin(static_cast<gpio_num_t>(pinB));
     gpio_set_direction(static_cast<gpio_num_t>(pinB), GPIO_MODE_INPUT);
     gpio_set_pull_mode(static_cast<gpio_num_t>(pinB), GPIO_PULLUP_ONLY);
 
+    // Install ISR service
+    gpio_install_isr_service(ESP_INTR_FLAG_LEVEL1);
+
     // Attach interrupts
-    gpio_isr_handler_add(static_cast<gpio_num_t>(pinA), encoderISR_A, NULL);
-    gpio_isr_handler_add(static_cast<gpio_num_t>(pinB), encoderISR_B, NULL);
+    gpio_isr_handler_add(static_cast<gpio_num_t>(pinA), encoderISR_A, this);
+    gpio_isr_handler_add(static_cast<gpio_num_t>(pinB), encoderISR_B, this);
 }
 
 int Encoder::getPosition()
@@ -42,52 +43,54 @@ bool Encoder::getDirection()
     return encoderDirection;
 }
 
-// float Encoder::getDistance()
-// {
-//     return encoderPosition * DISTANCE_PER_PULSE;
-// }
-
 // ISR for pin A
-void IRAM_ATTR Encoder::encoderISR_A()
+void Encoder::encoderISR_A(void *arg)
 {
-    bool pinAState = (GPIO.in >> ENCODER_PIN_A) & 0x1;
-    bool pinBState = (GPIO.in >> ENCODER_PIN_B) & 0x1;
+    Encoder *enc = static_cast<Encoder *>(arg); // Cast the argument back to the Encoder object
+    bool pinAState = (REG_READ(GPIO_IN_REG) >> enc->pinA) & 0x1;
+    bool pinBState = (REG_READ(GPIO_IN_REG) >> enc->pinB) & 0x1;
 
     if (pinAState != pinBState)
     {
-        encoderPosition++;
-        encoderDirection = 1;
+        Encoder::encoderPosition++;
+        Encoder::encoderDirection = 1;
     }
     else
     {
-        encoderPosition--;
-        encoderDirection = 0;
+        Encoder::encoderPosition--;
+        Encoder::encoderDirection = 0;
     }
-    pulseCount++;
+    Encoder::pulseCount++;
 }
 
 // ISR for pin B
-void IRAM_ATTR Encoder::encoderISR_B()
+void Encoder::encoderISR_B(void *arg)
 {
-    bool pinAState = (GPIO.in >> ENCODER_PIN_A) & 0x1;
-    bool pinBState = (GPIO.in >> ENCODER_PIN_B) & 0x1;
+    Encoder *enc = static_cast<Encoder *>(arg); // Cast the argument back to the Encoder object
+    bool pinAState = (REG_READ(GPIO_IN_REG) >> enc->pinA) & 0x1;
+    bool pinBState = (REG_READ(GPIO_IN_REG) >> enc->pinB) & 0x1;
 
     if (pinAState == pinBState)
     {
-        encoderPosition++;
-        encoderDirection = 1;
+        Encoder::encoderPosition++;
+        Encoder::encoderDirection = 1;
     }
     else
     {
-        encoderPosition--;
-        encoderDirection = -1;
+        Encoder::encoderPosition--;
+        Encoder::encoderDirection = 0;
     }
-    pulseCount++;
+    Encoder::pulseCount++;
 }
 
 float Encoder::calcRPM()
 {
-    float rpm = (pulseCount / PPR) * 60;
+    static unsigned long lastTime = 0;
+    unsigned long currentTime = millis();
+    float timeInterval = (currentTime - lastTime) / 1000.0;
+    lastTime = currentTime;
+
+    float rpm = (pulseCount / PPR) * (60.0 / timeInterval);
     pulseCount = 0;
     return rpm;
 }
