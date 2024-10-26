@@ -6,12 +6,17 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-void imu_init();
-void i2c_init();
-void I2C_writeByte(uint8_t address, uint8_t reg, uint8_t data);
-void init_IMU();
-void configure_IMU();
-void read_IMU();
-void convert_IMU();
+
+
+struct IMU {
+    IMU(){}
+    float base_GyZ = 0;
+    int16_t accData[3];
+    int16_t gyroData[3];
+    void fetchIMU();
+    void IMU_init();
+
+};
+
 
 #endif //IMU_H
