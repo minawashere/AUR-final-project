@@ -1,95 +1,94 @@
 #include "encoder.h"
-#include "esp_intr_alloc.h"
-#include "soc/gpio_reg.h"
 
-volatile int Encoder::encoderPosition = 0;
-volatile bool encoderDirection = 0;
-volatile int Encoder::pulseCount = 0;
+#define PPR 22  // Pulses per revolution
 
-#define PPR 22 // pulses per revolution
+// Static variable definitions
+volatile int encoderPosition = 0;
+volatile int encoderDirection = 0;
+volatile int pulseCount = 0;
+Encoder* Encoder::instance = nullptr; // Initialize the static instance pointer
+volatile unsigned long last_time = 0;
 
-Encoder::Encoder(const int pinA, const int pinB)
-{
-    this->pinA = pinA;
-    this->pinB = pinB;
+Encoder::Encoder(const int pinA, const int pinB) : pinA(pinA), pinB(pinB) {
+    last_time = micros();
 }
 
-void Encoder::begin()
-{
-    gpio_reset_pin(static_cast<gpio_num_t>(pinA));
-    gpio_set_direction(static_cast<gpio_num_t>(pinA), GPIO_MODE_INPUT);
-    gpio_set_pull_mode(static_cast<gpio_num_t>(pinA), GPIO_PULLUP_ONLY);
+void Encoder::begin() {
+    Serial.println("Initializing encoder...");
 
-    gpio_reset_pin(static_cast<gpio_num_t>(pinB));
-    gpio_set_direction(static_cast<gpio_num_t>(pinB), GPIO_MODE_INPUT);
-    gpio_set_pull_mode(static_cast<gpio_num_t>(pinB), GPIO_PULLUP_ONLY);
+    pinMode(pinA, INPUT);
+    pinMode(pinB, INPUT);
 
-    // Install ISR service
-    gpio_install_isr_service(ESP_INTR_FLAG_LEVEL1);
+    instance = this;
 
-    // Attach interrupts
-    gpio_isr_handler_add(static_cast<gpio_num_t>(pinA), encoderISR_A, this);
-    gpio_isr_handler_add(static_cast<gpio_num_t>(pinB), encoderISR_B, this);
+    attachInterrupt(digitalPinToInterrupt(pinA), encoderISR_A, RISING);
+    attachInterrupt(digitalPinToInterrupt(pinB), encoderISR_B, RISING);
+
+    Serial.println("Encoder initialized.");
 }
 
-int Encoder::getPosition()
-{
-    return encoderPosition;
+int Encoder::getPosition() {
+
+    noInterrupts();
+    int position = encoderPosition;
+    interrupts();
+    return position;
 }
 
-bool Encoder::getDirection()
-{
+bool Encoder::getDirection() {
+    // noInterrupts();
+    // bool direction = encoderDirection;
+    // interrupts();
     return encoderDirection;
 }
 
-// ISR for pin A
-void Encoder::encoderISR_A(void *arg)
-{
-    Encoder *enc = static_cast<Encoder *>(arg); // Cast the argument back to the Encoder object
-    bool pinAState = (REG_READ(GPIO_IN_REG) >> enc->pinA) & 0x1;
-    bool pinBState = (REG_READ(GPIO_IN_REG) >> enc->pinB) & 0x1;
-
-    if (pinAState != pinBState)
-    {
-        Encoder::encoderPosition++;
-        Encoder::encoderDirection = 1;
-    }
-    else
-    {
-        Encoder::encoderPosition--;
-        Encoder::encoderDirection = 0;
-    }
-    Encoder::pulseCount++;
+int Encoder::getPulseCount(){
+    // noInterrupts();
+    // int count = pulseCount;
+    // interrupts();
+    return pulseCount;
 }
 
-// ISR for pin B
-void Encoder::encoderISR_B(void *arg)
-{
-    Encoder *enc = static_cast<Encoder *>(arg); // Cast the argument back to the Encoder object
-    bool pinAState = (REG_READ(GPIO_IN_REG) >> enc->pinA) & 0x1;
-    bool pinBState = (REG_READ(GPIO_IN_REG) >> enc->pinB) & 0x1;
+void Encoder::encoderISR_A() {
+    if (instance) {
+        bool pinAState = digitalRead(instance->pinA);
+        bool pinBState = digitalRead(instance->pinB);
 
-    if (pinAState == pinBState)
-    {
-        Encoder::encoderPosition++;
-        Encoder::encoderDirection = 1;
+        if (pinAState != pinBState) {
+            encoderPosition++;
+            encoderDirection = 1;
+        } else {
+            encoderPosition--;
+            encoderDirection = 0;
+        }
+        pulseCount++;
     }
-    else
-    {
-        Encoder::encoderPosition--;
-        Encoder::encoderDirection = 0;
-    }
-    Encoder::pulseCount++;
 }
 
-float Encoder::calcRPM()
-{
-    static unsigned long lastTime = 0;
-    unsigned long currentTime = millis();
-    float timeInterval = (currentTime - lastTime) / 1000.0;
-    lastTime = currentTime;
+void Encoder::encoderISR_B() {
+    if (instance) {
+        bool pinAState = digitalRead(instance->pinA);
+        bool pinBState = digitalRead(instance->pinB);
 
-    float rpm = (pulseCount / PPR) * (60.0 / timeInterval);
-    pulseCount = 0;
+        if (pinAState == pinBState) {
+            encoderPosition++;
+            encoderDirection = 1;
+        } else {
+            encoderPosition--;
+            encoderDirection = 0;
+        }
+        pulseCount++;
+    }
+}
+
+float Encoder::calcRPM() {
+    const unsigned long time = micros();
+    const double dt = (time - last_time) / 1000000.0;
+    if (dt > 0) {
+        rpm = (pulseCount - last_pulses)  * 60.0 / dt / PPR / 46.8;
+    }
+
+    last_time = time;
+    last_pulses = pulseCount;
     return rpm;
 }

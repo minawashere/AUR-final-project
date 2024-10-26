@@ -73,9 +73,3 @@ void convertData(int16_t *accData, int16_t *gyrData, float *convAccData, float *
     }
 }
 
-while(1) {
-    imuData data;
-    float convAccData[3],convGyrData[3];
-    read_IMU(data.accData,data.gyrData);
-
-}
