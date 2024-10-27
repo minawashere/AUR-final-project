@@ -1,8 +1,9 @@
+#include "encoder.h"
+#include "Arduino.h"
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 
-// WiFi and MQTT configuration
 const char *ssid = "Mina's Galaxy Note20 Ultra 5G";
 const char *password = "loli1414";
 
@@ -16,8 +17,23 @@ PubSubClient client(espClient);
 unsigned long lastMsgTime = 0;
 const unsigned long interval = 20; // 20 ms for 50 Hz
 
-// Function declarations
+// on message mqtt
 void callback(const char *topic, const byte *payload, unsigned int length);
+
+//setting encoder's ISR
+void isr();
+
+void isr2();
+
+static auto encoderLeft = Encoder(1, 2, isr);
+static auto encoderRight = Encoder(1, 2, isr2);
+
+void IRAM_ATTR isr() { encoderLeft.handleISR(); }
+void IRAM_ATTR isr2() { encoderRight.handleISR(); }
+
+void callback(const char *topic, const byte *payload, const unsigned int length) {
+    // Handle incoming messages
+}
 
 void setup() {
     Serial.begin(115200);
@@ -51,10 +67,6 @@ void setup() {
     client.subscribe(topic);
 }
 
-void callback(const char *topic, const byte *payload, const unsigned int length) {
-    // Handle incoming messages
-}
-
 void loop() {
     // Get the current time
     unsigned long currentTime = millis();
@@ -68,12 +80,18 @@ void loop() {
         int16_t gyrData[3];
 
         // Print IMU data to Serial Monitor
-        Serial.print("Acc X: "); Serial.print(accData[0]) / 16384.0;
-        Serial.print(" Acc Y: "); Serial.print(accData[1]) / 16384.0;
-        Serial.print(" Acc Z: "); Serial.println(accData[2]) / 16384.0;
-        Serial.print("Gyr X: "); Serial.print(gyrData[0]) / 131.0;
-        Serial.print(" Gyr Y: "); Serial.print(gyrData[1]) / 131.0;
-        Serial.print(" Gyr Z: "); Serial.println(gyrData[2]) / 131.0;
+        Serial.print("Acc X: ");
+        Serial.print(accData[0]) / 16384.0;
+        Serial.print(" Acc Y: ");
+        Serial.print(accData[1]) / 16384.0;
+        Serial.print(" Acc Z: ");
+        Serial.println(accData[2]) / 16384.0;
+        Serial.print("Gyr X: ");
+        Serial.print(gyrData[0]) / 131.0;
+        Serial.print(" Gyr Y: ");
+        Serial.print(gyrData[1]) / 131.0;
+        Serial.print(" Gyr Z: ");
+        Serial.println(gyrData[2]) / 131.0;
 
         // Create a JSON array to hold the data
         StaticJsonDocument<JSON_ARRAY_SIZE(8)> doc;
@@ -86,8 +104,8 @@ void loop() {
         array.add(4); // Gyr X
         array.add(5); // Gyr Y
         array.add(6); // Gyr Z
-        array.add(7);          // Placeholder
-        array.add(8);          // Placeholder
+        array.add(7); // Placeholder
+        array.add(8); // Placeholder
 
         // Determine the size needed for the MessagePack format
         size_t bufferSize = measureMsgPack(doc);
