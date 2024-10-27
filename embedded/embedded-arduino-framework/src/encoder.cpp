@@ -1,5 +1,4 @@
 #include "encoder.h"
-
 #include <float.h>
 
 #define PULSES_PER_REV 11
