@@ -1,5 +1,6 @@
 #include "encoder.h"
 #include "Arduino.h"
+#include "ArduinoJson"
 
 void isr();
 
