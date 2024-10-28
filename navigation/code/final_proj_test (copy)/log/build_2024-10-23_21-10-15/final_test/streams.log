@@ -1,0 +1,26 @@
+[0.878s] Invoking command in '/home/abood/final_proj_test/src/final_test': PYTHONPATH=/home/abood/final_proj_test/build/final_test/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/abood/final_proj_test/install/final_test/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base ../../build/final_test build --build-base /home/abood/final_proj_test/build/final_test/build install --record /home/abood/final_proj_test/build/final_test/install.log --single-version-externally-managed install_data
+[1.129s] running egg_info
+[1.130s] writing ../../build/final_test/final_test.egg-info/PKG-INFO
+[1.130s] writing dependency_links to ../../build/final_test/final_test.egg-info/dependency_links.txt
+[1.130s] writing entry points to ../../build/final_test/final_test.egg-info/entry_points.txt
+[1.131s] writing requirements to ../../build/final_test/final_test.egg-info/requires.txt
+[1.131s] writing top-level names to ../../build/final_test/final_test.egg-info/top_level.txt
+[1.132s] reading manifest file '../../build/final_test/final_test.egg-info/SOURCES.txt'
+[1.135s] writing manifest file '../../build/final_test/final_test.egg-info/SOURCES.txt'
+[1.135s] running build
+[1.135s] running build_py
+[1.135s] copying final_test/test_mqtt.py -> /home/abood/final_proj_test/build/final_test/build/lib/final_test
+[1.136s] running install
+[1.136s] running install_lib
+[1.137s] copying /home/abood/final_proj_test/build/final_test/build/lib/final_test/test_mqtt.py -> /home/abood/final_proj_test/install/final_test/lib/python3.10/site-packages/final_test
+[1.138s] byte-compiling /home/abood/final_proj_test/install/final_test/lib/python3.10/site-packages/final_test/test_mqtt.py to test_mqtt.cpython-310.pyc
+[1.138s] byte-compiling /home/abood/final_proj_test/install/final_test/lib/python3.10/site-packages/final_test/test.py to test.cpython-310.pyc
+[1.140s] running install_data
+[1.140s] running install_egg_info
+[1.142s] removing '/home/abood/final_proj_test/install/final_test/lib/python3.10/site-packages/final_test-0.0.0-py3.10.egg-info' (and everything under it)
+[1.142s] Copying ../../build/final_test/final_test.egg-info to /home/abood/final_proj_test/install/final_test/lib/python3.10/site-packages/final_test-0.0.0-py3.10.egg-info
+[1.143s] running install_scripts
+[1.165s] Installing test script to /home/abood/final_proj_test/install/final_test/lib/final_test
+[1.165s] Installing test_mqtt script to /home/abood/final_proj_test/install/final_test/lib/final_test
+[1.165s] writing list of installed files to '/home/abood/final_proj_test/build/final_test/install.log'
+[1.192s] Invoked command in '/home/abood/final_proj_test/src/final_test' returned '0': PYTHONPATH=/home/abood/final_proj_test/build/final_test/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/abood/final_proj_test/install/final_test/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base ../../build/final_test build --build-base /home/abood/final_proj_test/build/final_test/build install --record /home/abood/final_proj_test/build/final_test/install.log --single-version-externally-managed install_data

@@ -1,0 +1,3 @@
+source;share/autonomous_test/hook/pythonpath.ps1
+source;share/autonomous_test/hook/pythonpath.dsv
+source;share/autonomous_test/hook/pythonpath.sh

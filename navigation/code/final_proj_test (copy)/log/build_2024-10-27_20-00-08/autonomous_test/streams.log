@@ -1,0 +1,41 @@
+[0.459s] Invoking command in '/home/abood/final_proj_test/src/autonomous_test': PYTHONPATH=/home/abood/final_proj_test/build/autonomous_test/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/abood/final_proj_test/install/autonomous_test/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base ../../build/autonomous_test build --build-base /home/abood/final_proj_test/build/autonomous_test/build install --record /home/abood/final_proj_test/build/autonomous_test/install.log --single-version-externally-managed install_data
+[0.598s] running egg_info
+[0.598s] creating ../../build/autonomous_test/autonomous_test.egg-info
+[0.598s] writing ../../build/autonomous_test/autonomous_test.egg-info/PKG-INFO
+[0.598s] writing dependency_links to ../../build/autonomous_test/autonomous_test.egg-info/dependency_links.txt
+[0.598s] writing entry points to ../../build/autonomous_test/autonomous_test.egg-info/entry_points.txt
+[0.598s] writing requirements to ../../build/autonomous_test/autonomous_test.egg-info/requires.txt
+[0.598s] writing top-level names to ../../build/autonomous_test/autonomous_test.egg-info/top_level.txt
+[0.598s] writing manifest file '../../build/autonomous_test/autonomous_test.egg-info/SOURCES.txt'
+[0.599s] reading manifest file '../../build/autonomous_test/autonomous_test.egg-info/SOURCES.txt'
+[0.600s] writing manifest file '../../build/autonomous_test/autonomous_test.egg-info/SOURCES.txt'
+[0.600s] running build
+[0.600s] running build_py
+[0.600s] creating /home/abood/final_proj_test/build/autonomous_test/build
+[0.600s] creating /home/abood/final_proj_test/build/autonomous_test/build/lib
+[0.600s] creating /home/abood/final_proj_test/build/autonomous_test/build/lib/autonomous_test
+[0.600s] copying autonomous_test/sub_node_fromESP.py -> /home/abood/final_proj_test/build/autonomous_test/build/lib/autonomous_test
+[0.600s] copying autonomous_test/navigation_node.py -> /home/abood/final_proj_test/build/autonomous_test/build/lib/autonomous_test
+[0.600s] copying autonomous_test/__init__.py -> /home/abood/final_proj_test/build/autonomous_test/build/lib/autonomous_test
+[0.600s] running install
+[0.600s] running install_lib
+[0.601s] creating /home/abood/final_proj_test/install/autonomous_test/lib/python3.10/site-packages/autonomous_test
+[0.601s] copying /home/abood/final_proj_test/build/autonomous_test/build/lib/autonomous_test/sub_node_fromESP.py -> /home/abood/final_proj_test/install/autonomous_test/lib/python3.10/site-packages/autonomous_test
+[0.601s] copying /home/abood/final_proj_test/build/autonomous_test/build/lib/autonomous_test/navigation_node.py -> /home/abood/final_proj_test/install/autonomous_test/lib/python3.10/site-packages/autonomous_test
+[0.601s] copying /home/abood/final_proj_test/build/autonomous_test/build/lib/autonomous_test/__init__.py -> /home/abood/final_proj_test/install/autonomous_test/lib/python3.10/site-packages/autonomous_test
+[0.601s] byte-compiling /home/abood/final_proj_test/install/autonomous_test/lib/python3.10/site-packages/autonomous_test/sub_node_fromESP.py to sub_node_fromESP.cpython-310.pyc
+[0.602s] byte-compiling /home/abood/final_proj_test/install/autonomous_test/lib/python3.10/site-packages/autonomous_test/navigation_node.py to navigation_node.cpython-310.pyc
+[0.602s] byte-compiling /home/abood/final_proj_test/install/autonomous_test/lib/python3.10/site-packages/autonomous_test/__init__.py to __init__.cpython-310.pyc
+[0.602s] running install_data
+[0.602s] creating /home/abood/final_proj_test/install/autonomous_test/share
+[0.602s] creating /home/abood/final_proj_test/install/autonomous_test/share/ament_index
+[0.602s] creating /home/abood/final_proj_test/install/autonomous_test/share/ament_index/resource_index
+[0.602s] creating /home/abood/final_proj_test/install/autonomous_test/share/ament_index/resource_index/packages
+[0.602s] copying resource/autonomous_test -> /home/abood/final_proj_test/install/autonomous_test/share/ament_index/resource_index/packages
+[0.602s] creating /home/abood/final_proj_test/install/autonomous_test/share/autonomous_test
+[0.602s] copying package.xml -> /home/abood/final_proj_test/install/autonomous_test/share/autonomous_test
+[0.602s] running install_egg_info
+[0.604s] Copying ../../build/autonomous_test/autonomous_test.egg-info to /home/abood/final_proj_test/install/autonomous_test/lib/python3.10/site-packages/autonomous_test-0.0.0-py3.10.egg-info
+[0.604s] running install_scripts
+[0.617s] writing list of installed files to '/home/abood/final_proj_test/build/autonomous_test/install.log'
+[0.630s] Invoked command in '/home/abood/final_proj_test/src/autonomous_test' returned '0': PYTHONPATH=/home/abood/final_proj_test/build/autonomous_test/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/abood/final_proj_test/install/autonomous_test/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base ../../build/autonomous_test build --build-base /home/abood/final_proj_test/build/autonomous_test/build install --record /home/abood/final_proj_test/build/autonomous_test/install.log --single-version-externally-managed install_data
