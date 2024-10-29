@@ -8,7 +8,7 @@ class PID {
     double kp, ki, kd, max_output;
     double accum = 0;
     double prev_err = 0;
-    unsigned long long prev_time = micors();
+    unsigned long long prev_time = micros();
 
 public:
     PID(const float kp, const float ki, const float kd, const float max_output);

@@ -2,8 +2,7 @@
 #include <Wire.h>
 #include "imu.h"
 
-#define SDA_PIN 21
-#define SCL_PIN 22
+
 #define MPU6050_ADDR 0x68
 #define ACC_FACTOR 16384.0
 #define GYRO_FACTOR 131.0
@@ -30,7 +29,7 @@ void I2C_WriteByte(uint8_t address, uint8_t reg, uint8_t data) {
 void IMU::fetchIMU() {
   // Read accelerometer data
   Wire.beginTransmission(MPU6050_ADDR);
-  Wire.write(0x3B);             // Starting register for accelerometer data
+  Wire.write(0x3B); // Starting register for accelerometer data
   Wire.endTransmission(false);
 
   Wire.requestFrom(MPU6050_ADDR, 6);
@@ -40,7 +39,7 @@ void IMU::fetchIMU() {
   }
   // Read gyroscope data
   Wire.beginTransmission(MPU6050_ADDR);
-  Wire.write(0x43);             // Starting register for gyroscope data
+  Wire.write(0x43); // Starting register for gyroscope data
   Wire.endTransmission(false);
 
   Wire.requestFrom(MPU6050_ADDR, 6);
@@ -50,12 +49,12 @@ void IMU::fetchIMU() {
   }
 }
 
-void IMU::IMU_init() {
+void IMU::IMU_init(const uint8_t SDA_PIN, const uint8_t SCL_PIN) {
   Wire.begin(SDA_PIN, SCL_PIN);
-  Wire.setClock(400000);  // Fast mode I2C
-  I2C_WriteByte(MPU6050_ADDR, 0x6B, 0x00);  // Power management register
-  I2C_WriteByte(MPU6050_ADDR, 0x1C, 0x00);  // Set accelerometer to ±2g
-  I2C_WriteByte(MPU6050_ADDR, 0x1B, 0x00);  // Set gyroscope to ±250°/s
+  Wire.setClock(400000); // Fast mode I2C
+  I2C_WriteByte(MPU6050_ADDR, 0x6B, 0x00); // Power management register
+  I2C_WriteByte(MPU6050_ADDR, 0x1C, 0x00); // Set accelerometer to ±2g
+  I2C_WriteByte(MPU6050_ADDR, 0x1B, 0x00); // Set gyroscope to ±250°/s
   for (int i = 0; i < 1000; i++) {
     fetchIMU();
     base_GyZ += accData[2];

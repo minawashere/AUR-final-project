@@ -1,7 +1,13 @@
 #include "Arduino.h"
 #include "float.h"
-#include "PID.h"
 
+#include "ArduinoJson.h"
+#include "PubSubClient.h"
+#include "WiFi.h"
+
+#include "PID.h"
+#include "imu.h"
+#include "servo.h"
 
 #define GEAR_RATIO 46.8
 #define PULSES_PER_REV 11
@@ -65,7 +71,7 @@ private:
 
 public:
     Motor(const uint8_t pin1, const uint8_t pin2, const uint8_t pwm_pin) : pin1(pin1), pin2(pin2), pwm_pin(pwm_pin),
-        {
+                                                                                                {
         pinMode(pwm_pin, OUTPUT);
         pinMode(pin1, OUTPUT);
         pinMode(pin2, OUTPUT);

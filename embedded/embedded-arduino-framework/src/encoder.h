@@ -2,13 +2,15 @@
 #define ENCODER_H
 
 #include <Arduino.h>
+#include <ArduinoJson.h>
+
 
 class Encoder {
 public:
     uint8_t pinA, pinB;
     Encoder(const uint8_t pinA, const uint8_t pinB);
     int32_t position();
-    boolint8_t direction();
+    int8_t direction();
     uint32_t pulses();
 
 
