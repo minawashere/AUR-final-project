@@ -5,22 +5,22 @@
 
 class Encoder {
 public:
-    Encoder(int pinA, int pinB);
-    void begin();
+    uint8_t pinA, pinB;
+    Encoder(const uint8_t pinA, const uint8_t pinB);
+    int32_t position();
+    boolint8_t direction();
+    uint32_t pulses();
 
-    int getPosition();
-    bool getDirection();
-    float calcRPM();
 
-    static void encoderISR_A();
-    static void encoderISR_B();
-    static int getPulseCount();
+    double rpm();
+
+
+
 
 private:
-    int pinA, pinB;                // Encoder pin definitions
-    int last_pulses;
-    unsigned long prev_time;
-    double rpm;
+    uint32_t prev_pulses;
+    unsigned long prev_time = micros();
+    double m_rpm = 0;
 };
 
 #endif

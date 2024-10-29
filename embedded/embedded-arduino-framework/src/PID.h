@@ -1,19 +1,20 @@
 #ifndef PID_H
 #define PID_H
 
-
+#include <Arduino.h>
 
 
 class PID {
-    float kp, ki, kd, max_output;
-    float accum{};
-    float prev_err{};
-    unsigned long long prev_time{};
-public:
-    PID(const float kp,const  float ki, const float kd, const float max_output);
-    float get_output(const float target, const float current);
-};
+    double kp, ki, kd, max_output;
+    double accum = 0;
+    double prev_err = 0;
+    unsigned long long prev_time = micors();
 
+public:
+    PID(const float kp, const float ki, const float kd, const float max_output);
+
+    double get_output(const double target, const double current);
+};
 
 
 #endif //PID_H
