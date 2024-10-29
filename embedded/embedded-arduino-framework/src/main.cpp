@@ -1,21 +1,21 @@
 #include "encoder.h"
 #include "Arduino.h"
 #include <WiFi.h>
-#include <PubSubClient.h>
 #include <ArduinoJson.h>
+#include <PubSubClient.h>
 
-const char *ssid = "Mina's Galaxy Note20 Ultra 5G";
-const char *password = "loli1414";
+auto ssid = "Mina's Galaxy Note20 Ultra 5G";
+auto password = "loli1414";
 
-const char *mqtt_broker = "mqtt.eclipseprojects.io";
-const char *topic = "Motion Commands";
-const int mqtt_port = 1883;
+auto mqtt_broker = "mqtt.eclipseprojects.io";
+auto topic = "Motion Commands";
+constexpr int mqtt_port = 1883;
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
 unsigned long lastMsgTime = 0;
-const unsigned long interval = 20; // 20 ms for 50 Hz
+constexpr unsigned long interval = 20; // 20 ms for 50 Hz
 
 // on message mqtt
 void callback(const char *topic, const byte *payload, unsigned int length);
