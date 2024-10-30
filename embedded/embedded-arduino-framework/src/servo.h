@@ -1,23 +1,20 @@
-#ifndef SERVO_H
-#define SERVO_H
+#pragma once
+#include <Arduino.h>
 
-#include "driver/gpio.h"
-#include "soc/gpio_struct.h"
-#include "driver/timer.h"
 
-class Servo
-{
+class Servo {
 public:
-    Servo(int pin);
-    void write(float speed); // Public function to control servo
-    void setServoPin();      // Make this public if you want to call it externally
+    Servo(const uint8_t pin, const uint8_t lecdChannel): pin(pin), lecdChannel(lecdChannel) {
+        pinMode(pin, OUTPUT);
+        ledcSetup(lecdChannel, 50, 12);
+        ledcAttachPin(pin, lecdChannel);
+    }
+
+    void write(double angle) const;
 
 private:
-    int servoPin;
-    float calcPulseWidth(float speed);
-    void setupTimer();
-    void setTimer(float pulseWidth);
-    static void IRAM_ATTR onTimer(void *arg);
+    uint8_t pin;
+    uint8_t lecdChannel;
 };
 
-#endif
+
