@@ -4,6 +4,10 @@
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
 
+#define SDA_PIN 21
+#define SCL_PIN 22
+
+
 auto ssid = "Mina's Galaxy Note20 Ultra 5G";
 auto password = "loli1414";
 

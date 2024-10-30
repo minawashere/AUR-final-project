@@ -2,8 +2,7 @@
 #include <Wire.h>
 #include "imu.h"
 
-#define SDA_PIN 21
-#define SCL_PIN 22
+
 #define MPU6050_ADDR 0x68
 #define ACC_FACTOR 16384.0
 #define GYRO_FACTOR 131.0
@@ -50,8 +49,22 @@ void IMU::fetchIMU() {
     }
 }
 
-void IMU::IMU_init() {
-    Wire.begin(SDA_PIN, SCL_PIN);
+// void IMU::IMU_init() {
+//     Wire.begin(SDA_PIN, SCL_PIN);
+//     Wire.setClock(400000);  // Fast mode I2C
+//     I2C_WriteByte(MPU6050_ADDR, 0x6B, 0x00);  // Power management register
+//     I2C_WriteByte(MPU6050_ADDR, 0x1C, 0x00);  // Set accelerometer to ±2g
+//     I2C_WriteByte(MPU6050_ADDR, 0x1B, 0x00);  // Set gyroscope to ±250°/s
+//     for (int i = 0; i < 1000; i++) {
+//         fetchIMU();
+//         base_GyZ += accData[2];
+//         delay(5);
+//     }
+//     base_GyZ /= -1000;
+// }
+
+IMU::IMU(const uint8_t sda_pin, const uint8_t scl_pin) {
+    Wire.begin(sda_pin, scl_pin);
     Wire.setClock(400000);  // Fast mode I2C
     I2C_WriteByte(MPU6050_ADDR, 0x6B, 0x00);  // Power management register
     I2C_WriteByte(MPU6050_ADDR, 0x1C, 0x00);  // Set accelerometer to ±2g
@@ -62,5 +75,5 @@ void IMU::IMU_init() {
         delay(5);
     }
     base_GyZ /= -1000;
+    Serial.println("IMU initialized");
 }
-
