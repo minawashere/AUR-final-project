@@ -11,7 +11,8 @@ class PID {
     unsigned long long prev_time{};
 public:
     PID(const float kp,const  float ki, const float kd, const float max_output);
-    float get_output(const float target, const float current);
+
+    double get_output(double target, double current);
 };
 
 
