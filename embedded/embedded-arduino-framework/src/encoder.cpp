@@ -1,3 +1,21 @@
+#include "encoder.h"
+#include "Arduino.h"
+#include "float.h"
+
+double Encoder::rpm() {
+    const unsigned long time = micros();
+    const double dt = (time - prev_time) / 1000000.0;
+    const uint32_t dp = pulse_count - prev_pulses;
+
+    this->prev_time = time;
+    this->prev_pulses = pulse_count;
+
+    if (dt < DBL_EPSILON) return prev_rpm;
+    prev_rpm = dp / dt * 60 / PULSES_PER_REV / GEAR_RATIO * static_cast<double>(m_direction);
+    return prev_rpm;
+}
+
+
 // #include "encoder.h"
 // #include <float.h>
 //

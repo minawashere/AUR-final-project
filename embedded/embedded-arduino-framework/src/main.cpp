@@ -4,6 +4,7 @@
 
 #include <WiFi.h>
 #include <ArduinoJson.h>
+#include <MsgPack.h>
 #include <PubSubClient.h>
 
 #include <freertos/FreeRTOS.h>
@@ -12,12 +13,11 @@
 #include "PID.h"
 #include "imu.h"
 #include "servo.h"
+#include "encoder.h"
+#include "motor.h"
 
 #define SDA_PIN 21
 #define SCL_PIN 22
-
-#define GEAR_RATIO 46.8
-#define PULSES_PER_REV 11
 
 #define ENCODERLEFT_PIN_A 2
 #define ENCODERLEFT_PIN_B 4
@@ -35,60 +35,6 @@
 #define MAX_SPEED 0.4  // m/s
 #define SMOOTHING_FACTOR 0.9
 
-enum Direction { FORWARDS = 1, BACKWARDS = -1 };
-
-struct Encoder {
-  Encoder(const uint8_t pinA, const uint8_t pinB): pinA(pinA), pinB(pinB) {
-    pinMode(pinA, INPUT);
-    pinMode(pinB, INPUT);
-  }
-
-  volatile int32_t m_position = 0;
-  volatile Direction m_direction = FORWARDS;
-  volatile uint32_t pulse_count = 0;
-
-  double rpm() {
-    const unsigned long time = micros();
-    const double dt = (time - prev_time) / 1000000.0;
-    const uint32_t dp = pulse_count - prev_pulses;
-
-    this->prev_time = time;
-    this->prev_pulses = pulse_count;
-
-    if (dt < DBL_EPSILON) return prev_rpm;
-    prev_rpm = dp / dt * 60 / PULSES_PER_REV / GEAR_RATIO * static_cast<double>(m_direction);
-    return prev_rpm;
-  }
-
-private:
-  const uint8_t pinA, pinB;
-  uint32_t prev_pulses = 0;
-  unsigned long prev_time = micros();
-  double prev_rpm = 0;
-};
-
-struct Motor {
-private:
-  unsigned long prev_count = 0;
-  unsigned long prev_time = 0;
-  uint8_t pin1;
-  uint8_t pin2;
-  uint8_t pwm_pin;
-
-public:
-  Motor(const uint8_t pin1, const uint8_t pin2, const uint8_t pwm_pin) : pin1(pin1), pin2(pin2), pwm_pin(pwm_pin) {
-    pinMode(pwm_pin, OUTPUT);
-    pinMode(pin1, OUTPUT);
-    pinMode(pin2, OUTPUT);
-  }
-
-  void drive(const Direction direction, const uint8_t speed) const {
-    const int l = (direction == FORWARDS) ? HIGH : LOW;
-    digitalWrite(pin1, l);
-    digitalWrite(pin2, !l);
-    analogWrite(pwm_pin, speed);
-  }
-};
 
 auto ssid = "Mina's Galaxy Note20 Ultra 5G";
 auto password = "loli1414";
@@ -117,48 +63,48 @@ double softStart(const double target, const double current, const double factor)
   return factor * current + (1 - factor) * target;
 }
 
-void isrRight() {
+void IRAM_ATTR isrRight() {
+  //lock ll function teb2a k operation wa7da
   encoderRight.pulse_count++;
   encoderRight.m_direction = (GPIO.in & (1 << ENCODERLEFT_PIN_B)) ? BACKWARDS : FORWARDS;
   encoderRight.m_position += encoderRight.m_direction;
 }
 
-void isrLeft() {
+void IRAM_ATTR isrLeft() {
   encoderLeft.pulse_count++;
   encoderLeft.m_direction = (GPIO.in & (1 << ENCODERRIGHT_PIN_B)) ? BACKWARDS : FORWARDS;
   encoderLeft.m_position += encoderLeft.m_direction;
 }
 
+
 void Task1_readSensors_sendData(void *pvParameters) {
   IMU imu(SDA_PIN, SCL_PIN);
 
-  StaticJsonDocument<JSON_ARRAY_SIZE(8)> doc;
-  const auto array = doc.to<JsonArray>();
 
   while (true) {
-    imu.fetchIMU();
-    // imu.accData,imu.gyroData;(data of the imu that will be send to the nav)
-    int32_t position1 = encoderLeft.m_position;
-    int32_t position2 = encoderRight.m_position;
+    imu.requestImu(); //change to imu.readData()
+    JsonDocument sensors;
+    auto array = sensors.to<JsonArray>();
 
-    array.add(imu.accData[0]); // Acc X
-    array.add(imu.accData[1]); // Acc Y
-    array.add(imu.accData[2]); // Acc Z
-    array.add(imu.gyroData[0]); // Gyr X
-    array.add(imu.gyroData[1]); // Gyr Y
-    array.add(imu.gyroData[2]); // Gyr Z
-    array.add(encoderRight.m_position); // leftEncoderPosition
-    array.add(encoderLeft.m_position); // rightEncoderPosition
+    /* USE DEDICATED MSGPACK LIBRARY */
 
-    const size_t bufferSize = measureMsgPack(doc);
+    array.add(imu.accData[0]);
+    array.add(imu.accData[1]);
+    array.add(imu.accData[2]);
+    array.add(imu.gyroData[0]);
+    array.add(imu.gyroData[1]);
+    array.add(imu.gyroData[2]);
+    array.add(encoderRight.m_position);
+    array.add(encoderLeft.m_position);
+
+    const size_t bufferSize = measureMsgPack(sensors);
 
     uint8_t payload[bufferSize];
 
-    serializeMsgPack(doc, payload, bufferSize);
+    serializeMsgPack(sensors, payload, bufferSize);
 
     client.publish(topic, payload, bufferSize);
-
-    vTaskDelay(pdMS_TO_TICKS(15));
+    // vTaskDelay(pdMS_TO_TICKS(15));
   }
 }
 
@@ -186,8 +132,12 @@ void Task2_Fetch_and_Drive(void *pvParameters) {
     const double rpmRight = encoderRight.rpm();
     const double rpmLeft = encoderLeft.rpm();
 
-    const Direction directionRight = rightVel > 0 ? FORWARDS : BACKWARDS;
-    const Direction directionLeft = leftVel > 0 ? FORWARDS : BACKWARDS;
+    const
+        Direction
+        directionRight = rightVel > 0 ? FORWARDS : BACKWARDS;
+    const
+        Direction
+        directionLeft = leftVel > 0 ? FORWARDS : BACKWARDS;
 
     const double outputRight = softStart(pidRight.get_output(rightVel, rpmRight), rightVel,SMOOTHING_FACTOR);
     const double outputLeft = softStart(pidLeft.get_output(leftVel, rpmLeft), rpmLeft,SMOOTHING_FACTOR);
@@ -233,8 +183,26 @@ void setup() {
   // if (dataQueue == NULL) {
   //   Serial.print("Error in initalizing queue");
   // }
-  xTaskCreate(Task1_readSensors_sendData, "Task1_readData", 2048, NULL, 1, NULL);
-  xTaskCreate(Task2_Fetch_and_Drive, "Task2_FetchDataFromBrokwer_PID_MotorDriver", 2048, NULL, 1,
-              NULL);
+  xTaskCreate(
+    Task1_readSensors_sendData,
+    "Task1_readData",
+    2048,
+    NULL,
+    1,
+    NULL
+  );
+
+  xTaskCreate(
+    Task2_Fetch_and_Drive,
+    "Task2_FetchDataFromBrokwer_PID_MotorDriver",
+    2048,
+    NULL,
+    1,
+    NULL
+  );
   // xTaskCreate(Task3_PID_MotorDriver, "Task3_PID_MotorDriver", 2048, NULL, 1, NULL);
 }
+
+void loop() {
+}
+

@@ -10,7 +10,7 @@ struct IMU {
     int16_t accData[3];
     int16_t gyroData[3];
 
-    void fetchIMU();
+    void requestImu();
 
     // void IMU_init();
 };

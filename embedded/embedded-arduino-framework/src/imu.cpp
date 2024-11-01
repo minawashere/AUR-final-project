@@ -26,7 +26,7 @@ void I2C_WriteByte(uint8_t address, uint8_t reg, uint8_t data) {
 //   I2C_WriteByte(MPU6050_ADDR, 0x1B, 0x00);  // Set gyroscope to ±250°/s
 // }
 
-void IMU::fetchIMU() {
+void IMU::requestImu() {
     // Read accelerometer data
     Wire.beginTransmission(MPU6050_ADDR);
     Wire.write(0x3B);             // Starting register for accelerometer data
@@ -70,7 +70,7 @@ IMU::IMU(const uint8_t sda_pin, const uint8_t scl_pin) {
     I2C_WriteByte(MPU6050_ADDR, 0x1C, 0x00);  // Set accelerometer to ±2g
     I2C_WriteByte(MPU6050_ADDR, 0x1B, 0x00);  // Set gyroscope to ±250°/s
     for (int i = 0; i < 1000; i++) {
-        fetchIMU();
+        requestImu();
         base_GyZ += accData[2];
         delay(5);
     }
