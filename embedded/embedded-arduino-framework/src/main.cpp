@@ -19,21 +19,27 @@
 #define SDA_PIN 21
 #define SCL_PIN 22
 
-#define ENCODERLEFT_PIN_A 2
-#define ENCODERLEFT_PIN_B 4
-#define ENCODERRIGHT_PIN_A 18
-#define ENCODERRIGHT_PIN_B 19
+#define ENCODER_LEFT_PIN_A 4
+#define ENCODER_LEFT_PIN_B 18
+#define ENCODER_RIGHT_PIN_A 2
+#define ENCODER_RIGHT_PIN_B 15
 
-#define MOTOR1_PIN_A 20
-#define MOTOR1_PIN_B 21
-#define MOTOR2_PIN_A 22
-#define MOTOR2_PIN_B 23
+#define MOTOR_LEFT_PIN_A 12
+#define MOTOR_LEFT_PIN_B 14
+#define MOTOR_RIGHT_PIN_A 19
+#define MOTOR_RIGHT_PIN_B 23
 
-#define MOTOR1_PWM 25
-#define MOTOR2_PWM 26
+#define MOTOR_LEFT_PWM 27
+#define MOTOR_RIGHT_PWM 13
 
 #define MAX_SPEED 0.4  // m/s
 #define SMOOTHING_FACTOR 0.9
+
+#define SERVO_ELEV_PIN 26
+#define SERVO_GRIPPER_PIN 25
+
+#define SERVO_ELEV_CHANNEL 0
+#define SERVO_GRIPPER_CHANNEL 1
 
 
 auto ssid = "Mina's Galaxy Note20 Ultra 5G";
@@ -52,12 +58,22 @@ constexpr unsigned long interval = 20; //ms
 static auto pidRight = PID(1, 0, 0, MAX_SPEED);
 static auto pidLeft = PID(1, 1, 0, MAX_SPEED);
 
-static auto motorRight = Motor(MOTOR1_PIN_A, MOTOR1_PIN_B, MOTOR1_PWM);
-static auto motorLeft = Motor(MOTOR2_PIN_A, MOTOR2_PIN_B, MOTOR2_PWM);
+static auto motorRight = Motor(MOTOR_LEFT_PIN_A, MOTOR_LEFT_PIN_B, MOTOR_LEFT_PWM);
+static auto motorLeft = Motor(MOTOR_RIGHT_PIN_A, MOTOR_RIGHT_PIN_B, MOTOR_RIGHT_PWM);
 
 
-static auto encoderLeft = Encoder(ENCODERLEFT_PIN_A, ENCODERLEFT_PIN_B);
-static auto encoderRight = Encoder(ENCODERRIGHT_PIN_A, ENCODERRIGHT_PIN_B);
+double leftVel;
+double rightVel;
+
+int servoGripperData ;
+int servoElevData;
+
+
+static auto encoderLeft = Encoder(ENCODER_LEFT_PIN_A, ENCODER_LEFT_PIN_B);
+static auto encoderRight = Encoder(ENCODER_RIGHT_PIN_A, ENCODER_RIGHT_PIN_B);
+
+static auto servoElev=Servo(SERVO_ELEV_PIN,SERVO_ELEV_CHANNEL);
+static auto servoGripper=Servo(SERVO_GRIPPER_PIN,SERVO_GRIPPER_CHANNEL);
 
 double softStart(const double target, const double current, const double factor) {
   return factor * current + (1 - factor) * target;
@@ -66,20 +82,19 @@ double softStart(const double target, const double current, const double factor)
 void IRAM_ATTR isrRight() {
   //lock ll function teb2a k operation wa7da
   encoderRight.pulse_count++;
-  encoderRight.m_direction = (GPIO.in & (1 << ENCODERLEFT_PIN_B)) ? BACKWARDS : FORWARDS;
+  encoderRight.m_direction = (GPIO.in & (1 << ENCODER_LEFT_PIN_B)) ? BACKWARDS : FORWARDS;
   encoderRight.m_position += encoderRight.m_direction;
 }
 
 void IRAM_ATTR isrLeft() {
   encoderLeft.pulse_count++;
-  encoderLeft.m_direction = (GPIO.in & (1 << ENCODERRIGHT_PIN_B)) ? BACKWARDS : FORWARDS;
+  encoderLeft.m_direction = (GPIO.in & (1 << ENCODER_RIGHT_PIN_B)) ? BACKWARDS : FORWARDS;
   encoderLeft.m_position += encoderLeft.m_direction;
 }
 
 
 void Task1_readSensors_sendData(void *pvParameters) {
   IMU imu(SDA_PIN, SCL_PIN);
-
 
   while (true) {
     imu.requestImu(); //change to imu.readData()
@@ -104,7 +119,8 @@ void Task1_readSensors_sendData(void *pvParameters) {
     serializeMsgPack(sensors, payload, bufferSize);
 
     client.publish(topic, payload, bufferSize);
-    // vTaskDelay(pdMS_TO_TICKS(15));
+
+    vTaskDelay(1);
   }
 }
 
@@ -122,12 +138,54 @@ void Task1_readSensors_sendData(void *pvParameters) {
 //   // }
 // }
 
+#include <ArduinoJson.h>
+#include <PubSubClient.h>
+
+void mqttCallback(char* topic, byte* payload, unsigned int length) {
+  StaticJsonDocument<200> doc;
+  const DeserializationError error = deserializeMsgPack(doc, payload, length);
+
+
+  if (error) {
+    Serial.print(F("Failed to deserialize MessagePack: "));
+    Serial.println(error.c_str());
+    return;
+  }
+
+  const auto array = doc.as<JsonArray>();
+  leftVel = array[0];
+  rightVel = array[1];
+  servoElevData = array[2];
+  servoGripperData = array[3];
+
+  while(servoElevData!=0)
+  {
+    static uint16_t angle=0;
+    if(angle <= 180 || angle >= 0)
+    {
+      servoElev.write(angle);
+      angle+= servoElevData;
+    }
+  }
+
+
+  while(servoGripperData!=0)
+  {
+    static uint16_t angle=0;
+    if(angle <= 180 || angle >= 0)
+    {
+      servoGripper.write(angle);
+      angle+= servoGripperData;
+    }
+  }
+
+  vTaskDelay(1);
+}
+
+
 void Task2_Fetch_and_Drive(void *pvParameters) {
   while (true) {
-    double leftVel;
-    double rightVel;
 
-    //add mqtt
 
     const double rpmRight = encoderRight.rpm();
     const double rpmLeft = encoderLeft.rpm();
@@ -139,10 +197,12 @@ void Task2_Fetch_and_Drive(void *pvParameters) {
         Direction
         directionLeft = leftVel > 0 ? FORWARDS : BACKWARDS;
 
-    const double outputRight = softStart(pidRight.get_output(rightVel, rpmRight), rightVel,SMOOTHING_FACTOR);
-    const double outputLeft = softStart(pidLeft.get_output(leftVel, rpmLeft), rpmLeft,SMOOTHING_FACTOR);
+    const double outputRight = softStart(pidRight.get_output(rightVel * 95, rpmRight), rightVel,SMOOTHING_FACTOR);
+    const double outputLeft = softStart(pidLeft.get_output(leftVel * 95, rpmLeft), rpmLeft,SMOOTHING_FACTOR);
     motorRight.drive(directionRight, outputRight);
     motorLeft.drive(directionLeft, outputLeft);
+    vTaskDelay(1);
+
   }
 }
 
@@ -177,6 +237,8 @@ void setup() {
   // Publish and subscribe
   client.publish(topic, "MQTT CONNECTED");
   client.subscribe(topic);
+
+  client.setCallback(mqttCallback);
 
 
   // dataQueue = xQueueCreate(20, sizeof(imuData));
