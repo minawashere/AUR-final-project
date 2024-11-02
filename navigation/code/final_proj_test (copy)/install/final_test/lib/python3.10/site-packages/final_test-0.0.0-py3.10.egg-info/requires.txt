@@ -1,3 +1,0 @@
-msgpack
-paho-mqtt
-setuptools

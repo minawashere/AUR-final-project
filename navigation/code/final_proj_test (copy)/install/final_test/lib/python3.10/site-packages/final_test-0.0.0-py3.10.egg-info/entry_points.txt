@@ -1,8 +1,0 @@
-[console_scripts]
-esp_calc = final_test.esp_calc_node:main
-esp_pub = final_test.esp_publisher_node:main
-esp_sub = final_test.esp_subscriber_node:main
-sub_mqtt = final_test.sub_mqtt:main
-test = final_test.test:main
-test_mqtt = final_test.test_mqtt:main
-
