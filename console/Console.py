@@ -116,7 +116,7 @@ class RobotApp:
         self.root.bind("<KeyRelease-d>", self.reset_gripper_h)
         self.root.bind("<KeyRelease-a>", self.reset_gripper_h)
 
-        self.cap = cv2.VideoCapture(0)
+        self.cap = cv2.VideoCapture(1)
         self.update_video_feed()
 
         # Update robot position from the subscriber
@@ -126,7 +126,7 @@ class RobotApp:
         ret, frame = self.cap.read()
         if ret:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frame = cv2.resize(image, (MAP_SIZE, MAP_SIZE), interpolation = cv2.INTER_LINEAR)
+            frame = cv2.resize(frame, (MAP_SIZE, MAP_SIZE), interpolation = cv2.INTER_LINEAR)
             gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             qr_codes = decode(gray_frame)
 
@@ -158,7 +158,7 @@ class RobotApp:
                     self.target_x = float(parsed_data['X'][0])
                     self.target_y = float(parsed_data['Y'][0])
 
-                    self.target_label.config(text=f"Current: ({self.target_x}, {self.target_y})")
+                    self.target_label.config(text=f"Target: ({self.target_x}, {self.target_y})")
 
                     # if len(points) > 4:
                     #     hull = cv2.convexHull(np.array([point for point in points], dtype=np.float32))
@@ -185,25 +185,25 @@ class RobotApp:
 
     def move_forward(self, event):
         global left_motor_speed, right_motor_speed
-        left_motor_speed = 3  # Update left motor speed
-        right_motor_speed = 3  # Update right motor speed
+        left_motor_speed = 1  # Update left motor speed
+        right_motor_speed = 1  # Update right motor speed
 
 
     def move_backward(self, event):
         global left_motor_speed, right_motor_speed
-        left_motor_speed = -3  # Update left motor speed
-        right_motor_speed = -3  # Update right motor speed
+        left_motor_speed = -1  # Update left motor speed
+        right_motor_speed = -1  # Update right motor speed
 
 
     def turn_left(self, event):
         global left_motor_speed, right_motor_speed
-        left_motor_speed = -3  # Update left motor speed for turning
-        right_motor_speed = 3  # Update right motor speed for turning
+        left_motor_speed = -1  # Update left motor speed for turning
+        right_motor_speed = 1  # Update right motor speed for turning
 
     def turn_right(self, event):
         global left_motor_speed, right_motor_speed
-        left_motor_speed = 3  # Update left motor speed for turning
-        right_motor_speed = -3  # Update right motor speed for turning
+        left_motor_speed = 1  # Update left motor speed for turning
+        right_motor_speed = -1  # Update right motor speed for turning
 
     def reset_motor_speeds(self, event):
         global left_motor_speed, right_motor_speed
