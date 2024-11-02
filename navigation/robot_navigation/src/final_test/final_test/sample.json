@@ -1,0 +1,5 @@
+{
+    "name": "ROS2",
+    "version": "Humble",
+    "features": ["DDS", "RTOS", "Multiplatform"]
+}
