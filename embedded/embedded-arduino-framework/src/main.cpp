@@ -32,7 +32,7 @@
 #define MOTOR_LEFT_PWM 27
 #define MOTOR_RIGHT_PWM 13
 
-#define MAX_SPEED 0.4  // m/s
+#define MAX_SPEED 110  // rpm
 #define SMOOTHING_FACTOR 0.9
 
 #define SERVO_ELEV_PIN 26
@@ -55,15 +55,15 @@ PubSubClient client(espClient);
 unsigned long lastMsgTime = 0;
 constexpr unsigned long interval = 20; //ms
 
-static auto pidRight = PID(1, 0, 0, MAX_SPEED);
-static auto pidLeft = PID(1, 1, 0, MAX_SPEED);
+static auto pidRight = PID(1, 0.5, 0, 110);
+static auto pidLeft = PID(1, 0.5, 0, 110);
 
-static auto motorRight = Motor(MOTOR_LEFT_PIN_A, MOTOR_LEFT_PIN_B, MOTOR_LEFT_PWM);
-static auto motorLeft = Motor(MOTOR_RIGHT_PIN_A, MOTOR_RIGHT_PIN_B, MOTOR_RIGHT_PWM);
+static auto motorLeft = Motor(MOTOR_LEFT_PIN_A, MOTOR_LEFT_PIN_B, MOTOR_LEFT_PWM);
+static auto motorRight = Motor(MOTOR_RIGHT_PIN_A, MOTOR_RIGHT_PIN_B, MOTOR_RIGHT_PWM);
 
 
-double leftVel;
-double rightVel;
+double leftVel = 1;
+double rightVel = 1;
 
 int servoGripperData ;
 int servoElevData;
@@ -80,23 +80,24 @@ double softStart(const double target, const double current, const double factor)
 }
 
 void IRAM_ATTR isrRight() {
-  //lock ll function teb2a k operation wa7da
   encoderRight.pulse_count++;
-  encoderRight.m_direction = (GPIO.in & (1 << ENCODER_LEFT_PIN_B)) ? BACKWARDS : FORWARDS;
+  encoderRight.m_direction = (GPIO.in & (1 << ENCODER_RIGHT_PIN_B)) ? BACKWARDS : FORWARDS;
   encoderRight.m_position += encoderRight.m_direction;
+  // Serial.println(encoderRight.m_position);
 }
 
 void IRAM_ATTR isrLeft() {
   encoderLeft.pulse_count++;
-  encoderLeft.m_direction = (GPIO.in & (1 << ENCODER_RIGHT_PIN_B)) ? BACKWARDS : FORWARDS;
+  encoderLeft.m_direction = (GPIO.in & (1 << ENCODER_LEFT_PIN_B)) ? BACKWARDS : FORWARDS;
   encoderLeft.m_position += encoderLeft.m_direction;
+  // Serial.println(encoderLeft.m_position);
 }
 
 
 void Task1_readSensors_sendData(void *pvParameters) {
   IMU imu(SDA_PIN, SCL_PIN);
-
   while (true) {
+
     imu.requestImu(); //change to imu.readData()
     JsonDocument sensors;
     auto array = sensors.to<JsonArray>();
@@ -120,30 +121,17 @@ void Task1_readSensors_sendData(void *pvParameters) {
 
     client.publish(topic, payload, bufferSize);
 
+    client.loop();
+
     vTaskDelay(1);
   }
 }
 
-// void Task2_fetchBrokerData(void* pvParameters) {
-//   //
-//   // double leftVel;
-//   // double rightVel;
-//   // double velArr[] = { leftVel, rightVel };
-//   // while (1) {
-//   //   if (xQueueSend(dataQueue, velArr, portMAX_DELAY) != pdTRUE) {
-//   //     Serial.println("Error:failed to send the data to the queue");
-//   //   }
-//   //   //servo1 functions and data
-//   //   //servo2 functions and data
-//   // }
-// }
-
-#include <ArduinoJson.h>
-#include <PubSubClient.h>
 
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
-  StaticJsonDocument<200> doc;
+  JsonDocument doc;
   const DeserializationError error = deserializeMsgPack(doc, payload, length);
+
 
 
   if (error) {
@@ -158,7 +146,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   servoElevData = array[2];
   servoGripperData = array[3];
 
-  while(servoElevData!=0)
+  if(servoElevData!=0)
   {
     static uint16_t angle=0;
     if(angle <= 180 || angle >= 0)
@@ -169,7 +157,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   }
 
 
-  while(servoGripperData!=0)
+  if(servoGripperData!=0)
   {
     static uint16_t angle=0;
     if(angle <= 180 || angle >= 0)
@@ -179,7 +167,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     }
   }
 
-  vTaskDelay(1);
+  vTaskDelay(pdMS_TO_TICKS(1));
 }
 
 
@@ -197,11 +185,11 @@ void Task2_Fetch_and_Drive(void *pvParameters) {
         Direction
         directionLeft = leftVel > 0 ? FORWARDS : BACKWARDS;
 
-    const double outputRight = softStart(pidRight.get_output(rightVel * 95, rpmRight), rightVel,SMOOTHING_FACTOR);
+    const double outputRight = softStart(pidRight.get_output(rightVel * 95, rpmRight), rpmRight,SMOOTHING_FACTOR);
     const double outputLeft = softStart(pidLeft.get_output(leftVel * 95, rpmLeft), rpmLeft,SMOOTHING_FACTOR);
     motorRight.drive(directionRight, outputRight);
     motorLeft.drive(directionLeft, outputLeft);
-    vTaskDelay(1);
+    vTaskDelay(pdMS_TO_TICKS(1));
 
   }
 }
@@ -210,6 +198,16 @@ void Task2_Fetch_and_Drive(void *pvParameters) {
 void setup() {
   Serial.begin(115200);
   delay(1000);
+
+  servoElev.write(90);
+  servoGripper.write(90);
+  Serial.println("servo set");
+
+  attachInterrupt(digitalPinToInterrupt(ENCODER_LEFT_PIN_A), isrLeft, RISING);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_RIGHT_PIN_A), isrRight, RISING);
+
+  Serial.println("motor set");
+
 
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {

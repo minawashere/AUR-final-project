@@ -1,6 +1,7 @@
 
 #include "PID.h"
 #include "Arduino.h"
+#include "float.h"
 
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 #define max(a, b) (((a) > (b)) ? (a) : (b))
@@ -14,13 +15,16 @@ double PID::get_output(const double target, const double current) {
     const auto err = target - current;
     const auto dt = (micros() - prev_time) / 1000000.0;
 
-    const auto p = kp * err;
-    const auto d = kd * (prev_err - err) / dt;
-    accum += err * dt;
-    accum = clamp(accum, -max_output, max_output);
+    if(dt > DBL_EPSILON)
+    {
+        const auto p = kp * err;
+        const auto d = kd * (prev_err - err) / dt;
+        accum += err * dt;
+        accum = clamp(accum, -max_output, max_output);
 
-    const auto i = ki * accum;
+        const auto i = ki * accum;
 
-    prev_err = err;
-    return p + d + i;
+        prev_err = err;
+        return p + d + i;
+    } return accum;
 }
