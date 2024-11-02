@@ -126,6 +126,7 @@ class RobotApp:
         ret, frame = self.cap.read()
         if ret:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame = cv2.resize(image, (MAP_SIZE, MAP_SIZE), interpolation = cv2.INTER_LINEAR)
             gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             qr_codes = decode(gray_frame)
 
