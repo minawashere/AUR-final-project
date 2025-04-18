@@ -42,8 +42,8 @@
 #define SERVO_GRIPPER_CHANNEL 1
 
 
-auto ssid = "Mina's Galaxy Note20 Ultra 5G";
-auto password = "loli1414";
+auto ssid = "";
+auto password = "";
 
 auto mqtt_broker = "mqtt.eclipseprojects.io";
 auto topic = "Motion Commands";
